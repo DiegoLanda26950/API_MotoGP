@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\DAW\\2º\\DesarrolloEntornosServidor\\MotoGP_API\\MotoGP_API.csproj": {}
+    "C:\\Users\\PC\\Desktop\\MOTOGP_API\\API_MotoGP\\MotoGP_API.csproj": {}
   },
   "projects": {
-    "C:\\DAW\\2º\\DesarrolloEntornosServidor\\MotoGP_API\\MotoGP_API.csproj": {
+    "C:\\Users\\PC\\Desktop\\MOTOGP_API\\API_MotoGP\\MotoGP_API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\DAW\\2º\\DesarrolloEntornosServidor\\MotoGP_API\\MotoGP_API.csproj",
+        "projectUniqueName": "C:\\Users\\PC\\Desktop\\MOTOGP_API\\API_MotoGP\\MotoGP_API.csproj",
         "projectName": "MotoGP_API",
-        "projectPath": "C:\\DAW\\2º\\DesarrolloEntornosServidor\\MotoGP_API\\MotoGP_API.csproj",
+        "projectPath": "C:\\Users\\PC\\Desktop\\MOTOGP_API\\API_MotoGP\\MotoGP_API.csproj",
         "packagesPath": "C:\\Users\\PC\\.nuget\\packages\\",
-        "outputPath": "C:\\DAW\\2º\\DesarrolloEntornosServidor\\MotoGP_API\\obj\\",
+        "outputPath": "C:\\Users\\PC\\Desktop\\MOTOGP_API\\API_MotoGP\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\PC\\AppData\\Roaming\\NuGet\\NuGet.Config"

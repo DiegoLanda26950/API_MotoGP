@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "qzpLewA5C+0=",
+  "dgSpecHash": "ZHbKF7Hl2tk=",
   "success": true,
-  "projectFilePath": "C:\\DAW\\2º\\DesarrolloEntornosServidor\\MotoGP_API\\MotoGP_API.csproj",
+  "projectFilePath": "C:\\Users\\PC\\Desktop\\MOTOGP_API\\API_MotoGP\\MotoGP_API.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\PC\\.nuget\\packages\\microsoft.aspnetcore.openapi\\8.0.20\\microsoft.aspnetcore.openapi.8.0.20.nupkg.sha512",
     "C:\\Users\\PC\\.nuget\\packages\\microsoft.bcl.cryptography\\8.0.0\\microsoft.bcl.cryptography.8.0.0.nupkg.sha512",
