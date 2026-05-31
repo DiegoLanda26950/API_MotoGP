@@ -9,6 +9,8 @@ public class Piloto
     public int CampeonatosGanados { get; set; }
     public DateTime FechaNacimiento { get; set; }
     public bool Activo { get; set; }
+    // ID del usuario al que pertenece este piloto
+    public int UsuarioId { get; set; }
     // URL de la imagen del piloto almacenada en Cloudinary
     public string? ImagenUrl { get; set; }
     // ID público de Cloudinary para poder eliminar la imagen
@@ -18,12 +20,15 @@ public class Piloto
     public Equipo Equipo { get; set; }
     public Circuito Circuito { get; set; }
 
-    public Piloto(int id, string nombre, string nacionalidad, int dorsal, int campeonatosGanados, DateTime fechaNacimiento, bool activo, Moto moto, Equipo equipo, Circuito circuito)
+    // Constructor completo
+    public Piloto(int id, string nombre, string nacionalidad, int dorsal, int campeonatosGanados, DateTime fechaNacimiento, bool activo, int usuarioId, Moto moto, Equipo equipo, Circuito circuito)
     {
         Id = id; Nombre = nombre; Nacionalidad = nacionalidad;
         Dorsal = dorsal; CampeonatosGanados = campeonatosGanados;
         FechaNacimiento = fechaNacimiento; Activo = activo;
+        UsuarioId = usuarioId;
         Moto = moto; Equipo = equipo; Circuito = circuito;
     }
+    // Constructor vacío
     public Piloto() { }
 }

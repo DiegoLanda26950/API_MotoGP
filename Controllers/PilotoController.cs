@@ -27,16 +27,20 @@ namespace MotoGP_API.Controllers
             return Ok(pilotos);
         }
 
-        // GET api/piloto/search
-        // Obtiene pilotos filtrados y ordenados
+        // GET api/piloto/search?usuarioId=1
+        // GET api/piloto/search?usuarioId=1&nacionalidad=Española
+        // GET api/piloto/search?usuarioId=1&orderBy=nombre&ascending=true
+        // Obtiene pilotos filtrados, puede filtrarse por usuarioId para obtener
+        // solo los pilotos asociados a un usuario concreto
         [HttpGet("search")]
         public async Task<ActionResult<List<Piloto>>> SearchPilotos(
             [FromQuery] string? Nombre,
             [FromQuery] string? Nacionalidad,
+            [FromQuery] int? usuarioId,
             [FromQuery] string? orderBy,
             [FromQuery] bool ascending = true)
         {
-            var pilotos = await _repository.GetAllFilteredAsync(Nombre, Nacionalidad, orderBy, ascending);
+            var pilotos = await _repository.GetAllFilteredAsync(Nombre, Nacionalidad, usuarioId, orderBy, ascending);
             return Ok(pilotos);
         }
 
@@ -72,6 +76,7 @@ namespace MotoGP_API.Controllers
             existing.CampeonatosGanados = updatedPiloto.CampeonatosGanados;
             existing.FechaNacimiento = updatedPiloto.FechaNacimiento;
             existing.Activo = updatedPiloto.Activo;
+            existing.UsuarioId = updatedPiloto.UsuarioId;
             existing.Moto = updatedPiloto.Moto;
             existing.Equipo = updatedPiloto.Equipo;
             existing.Circuito = updatedPiloto.Circuito;
@@ -81,22 +86,20 @@ namespace MotoGP_API.Controllers
 
         // DELETE api/piloto/{id}
         // Elimina un piloto por su ID
+        // Si tiene imagen en Cloudinary la elimina también
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePiloto(int id)
         {
             var piloto = await _repository.GetByIdAsync(id);
             if (piloto == null) return NotFound();
-
-            // Si tiene imagen en Cloudinary la eliminamos también
             if (!string.IsNullOrEmpty(piloto.ImagenPublicId))
                 await _uploadService.DeleteAsync(piloto.ImagenPublicId);
-
             await _repository.DeleteAsync(id);
             return NoContent();
         }
 
         // POST api/piloto/{id}/imagen
-        // Sube o reemplaza la imagen del piloto
+        // Sube o reemplaza la imagen del piloto en Cloudinary
         [HttpPost("{id}/imagen")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> SubirImagen(int id, IFormFile imagen)
@@ -118,7 +121,7 @@ namespace MotoGP_API.Controllers
         }
 
         // DELETE api/piloto/{id}/imagen
-        // Elimina la imagen del piloto
+        // Elimina la imagen del piloto de Cloudinary
         [HttpDelete("{id}/imagen")]
         public async Task<IActionResult> EliminarImagen(int id)
         {

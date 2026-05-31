@@ -9,17 +9,21 @@ namespace MotoGP_API.Services
 
         public PilotoService(IPilotoRepository repo) { _repo = repo; }
 
+        // Obtiene todos los pilotos
         public async Task<List<Piloto>> GetAllAsync() => await _repo.GetAllAsync();
 
-        public async Task<List<Piloto>> GetAllFilteredAsync(string? Nombre, string? Nacionalidad, string? orderBy, bool ascending)
-            => await _repo.GetAllFilteredAsync(Nombre, Nacionalidad, orderBy, ascending);
+        // Filtra pilotos por nombre, nacionalidad, usuarioId y ordenación
+        public async Task<List<Piloto>> GetAllFilteredAsync(string? Nombre, string? Nacionalidad, int? usuarioId, string? orderBy, bool ascending)
+            => await _repo.GetAllFilteredAsync(Nombre, Nacionalidad, usuarioId, orderBy, ascending);
 
+        // Obtiene un piloto por su ID
         public async Task<Piloto?> GetByIdAsync(int id)
         {
             if (id <= 0) throw new ArgumentException("El ID debe ser mayor que cero.");
             return await _repo.GetByIdAsync(id);
         }
 
+        // Valida y crea un nuevo piloto
         public async Task AddAsync(Piloto piloto)
         {
             if (string.IsNullOrWhiteSpace(piloto.Nombre))
@@ -34,9 +38,12 @@ namespace MotoGP_API.Services
                 throw new ArgumentException("El piloto debe tener equipo asignado.");
             if (piloto.Circuito == null)
                 throw new ArgumentException("El piloto debe tener circuito asignado.");
+            if (piloto.UsuarioId <= 0)
+                throw new ArgumentException("El piloto debe tener un usuario asignado.");
             await _repo.AddAsync(piloto);
         }
 
+        // Valida y actualiza un piloto existente
         public async Task UpdateAsync(Piloto piloto)
         {
             if (piloto.Id <= 0) throw new ArgumentException("El ID no es válido.");
@@ -51,6 +58,7 @@ namespace MotoGP_API.Services
             await _repo.UpdateAsync(piloto);
         }
 
+        // Elimina un piloto por su ID
         public async Task DeleteAsync(int id)
         {
             if (id <= 0) throw new ArgumentException("El ID no es válido.");

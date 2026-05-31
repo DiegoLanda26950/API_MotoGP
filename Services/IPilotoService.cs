@@ -5,7 +5,8 @@ namespace MotoGP_API.Services
     public interface IPilotoService
     {
         Task<List<Piloto>> GetAllAsync();
-        Task<List<Piloto>> GetAllFilteredAsync(string? Nombre, string? Nacionalidad, string? orderBy, bool ascending);
+        // Filtrado por nombre, nacionalidad, usuarioId y ordenación
+        Task<List<Piloto>> GetAllFilteredAsync(string? Nombre, string? Nacionalidad, int? usuarioId, string? orderBy, bool ascending);
         Task<Piloto?> GetByIdAsync(int id);
         Task AddAsync(Piloto piloto);
         Task UpdateAsync(Piloto piloto);
