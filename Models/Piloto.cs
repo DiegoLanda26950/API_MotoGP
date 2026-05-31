@@ -9,6 +9,11 @@ public class Piloto
     public int CampeonatosGanados { get; set; }
     public DateTime FechaNacimiento { get; set; }
     public bool Activo { get; set; }
+    // URL de la imagen del piloto almacenada en Cloudinary
+    public string? ImagenUrl { get; set; }
+    // ID público de Cloudinary para poder eliminar la imagen
+    public string? ImagenPublicId { get; set; }
+    // Relaciones con otras entidades
     public Moto Moto { get; set; }
     public Equipo Equipo { get; set; }
     public Circuito Circuito { get; set; }

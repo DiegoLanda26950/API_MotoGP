@@ -8,6 +8,10 @@ public class Moto
     public double Peso { get; set; }
     public int Anio { get; set; }
     public string Color { get; set; }
+    // URL de la imagen de la moto almacenada en Cloudinary
+    public string? ImagenUrl { get; set; }
+    // ID público de Cloudinary para poder eliminar la imagen
+    public string? ImagenPublicId { get; set; }
 
     public Moto(int id, string marca, string modelo, int cilindrada, decimal potencia, double peso, int anio, string color)
     {

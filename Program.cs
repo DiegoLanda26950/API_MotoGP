@@ -1,19 +1,28 @@
+using MotoGP_API.Configurations;
 using MotoGP_API.Repositories;
 using MotoGP_API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Repositorios
+// Configuración de Cloudinary desde appsettings.json
+builder.Services.Configure<CloudinarySettings>(
+    builder.Configuration.GetSection("CloudinarySettings")
+);
+
+// Registro de repositorios
 builder.Services.AddScoped<IEquipoRepository, EquipoRepository>();
 builder.Services.AddScoped<IMotoRepository, MotoRepository>();
 builder.Services.AddScoped<ICircuitoRepository, CircuitoRepository>();
 builder.Services.AddScoped<IPilotoRepository, PilotoRepository>();
 
-// Servicios
+// Registro de servicios
 builder.Services.AddScoped<IEquipoService, EquipoService>();
 builder.Services.AddScoped<IMotoService, MotoService>();
 builder.Services.AddScoped<ICircuitoService, CircuitoService>();
 builder.Services.AddScoped<IPilotoService, PilotoService>();
+
+// Registro del servicio de subida de imágenes
+builder.Services.AddScoped<IUploadService, CloudinaryUploadService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

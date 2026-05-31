@@ -7,6 +7,10 @@ public class Equipo
     public int Victorias { get; set; }
     public DateTime FechaFundacion { get; set; }
     public bool EsFabricante { get; set; }
+    // URL de la imagen del logo del equipo almacenada en Cloudinary
+    public string? ImagenUrl { get; set; }
+    // ID público de Cloudinary para poder eliminar la imagen
+    public string? ImagenPublicId { get; set; }
 
     public Equipo(int id, string nombre, string pais, double presupuesto, int victorias, DateTime fechaFundacion, bool esFabricante)
     {

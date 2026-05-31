@@ -8,6 +8,10 @@ public class Circuito
     public int Curvas { get; set; }
     public bool Homologado { get; set; }
     public DateTime FechaInauguracion { get; set; }
+    // URL de la imagen del circuito almacenada en Cloudinary
+    public string? ImagenUrl { get; set; }
+    // ID público de Cloudinary para poder eliminar la imagen
+    public string? ImagenPublicId { get; set; }
 
     public Circuito(int id, string nombre, string pais, string ciudad, double longitud, int curvas, bool homologado, DateTime fechaInauguracion)
     {
