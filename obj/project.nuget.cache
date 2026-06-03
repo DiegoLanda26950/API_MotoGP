@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "Qoko+QjGZpY=",
+  "dgSpecHash": "fww5Z5x2Y2M=",
   "success": true,
   "projectFilePath": "C:\\Users\\PC\\Desktop\\MOTOGP_API\\API_MotoGP\\MotoGP_API.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\PC\\.nuget\\packages\\cloudinarydotnet\\1.29.1\\cloudinarydotnet.1.29.1.nupkg.sha512",
+    "C:\\Users\\PC\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\8.0.0\\microsoft.aspnetcore.authentication.jwtbearer.8.0.0.nupkg.sha512",
     "C:\\Users\\PC\\.nuget\\packages\\microsoft.aspnetcore.openapi\\8.0.20\\microsoft.aspnetcore.openapi.8.0.20.nupkg.sha512",
     "C:\\Users\\PC\\.nuget\\packages\\microsoft.bcl.cryptography\\8.0.0\\microsoft.bcl.cryptography.8.0.0.nupkg.sha512",
     "C:\\Users\\PC\\.nuget\\packages\\microsoft.data.sqlclient\\7.0.1\\microsoft.data.sqlclient.7.0.1.nupkg.sha512",

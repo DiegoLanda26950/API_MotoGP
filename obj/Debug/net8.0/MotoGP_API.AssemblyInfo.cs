@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MotoGP_API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+08d125803a88a58d2ba3da95234cba42bc2dc067")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b1aa7424ca5ae470b0a30804c09a0788d18c1e1b")]
 [assembly: System.Reflection.AssemblyProductAttribute("MotoGP_API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MotoGP_API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
