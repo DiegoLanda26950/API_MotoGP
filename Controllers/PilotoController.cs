@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models;
 using MotoGP_API.Repositories;
@@ -19,7 +20,8 @@ namespace MotoGP_API.Controllers
         }
 
         // GET api/piloto
-        // Obtiene todos los pilotos
+        // Cualquiera puede ver los pilotos (sin autenticación)
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<List<Piloto>>> GetPilotos()
         {
@@ -29,9 +31,9 @@ namespace MotoGP_API.Controllers
 
         // GET api/piloto/search?usuarioId=1
         // GET api/piloto/search?usuarioId=1&nacionalidad=Española
-        // GET api/piloto/search?usuarioId=1&orderBy=nombre&ascending=true
-        // Obtiene pilotos filtrados, puede filtrarse por usuarioId para obtener
-        // solo los pilotos asociados a un usuario concreto
+        // GET api/piloto/search?usuarioId=1&orderBy=nombre
+        // Cualquiera puede buscar pilotos filtrando por usuarioId (sin autenticación)
+        [AllowAnonymous]
         [HttpGet("search")]
         public async Task<ActionResult<List<Piloto>>> SearchPilotos(
             [FromQuery] string? Nombre,
@@ -45,7 +47,8 @@ namespace MotoGP_API.Controllers
         }
 
         // GET api/piloto/{id}
-        // Obtiene un piloto por su ID
+        // Cualquiera puede ver un piloto concreto (sin autenticación)
+        [AllowAnonymous]
         [HttpGet("{id}")]
         public async Task<ActionResult<Piloto>> GetPiloto(int id)
         {
@@ -55,7 +58,8 @@ namespace MotoGP_API.Controllers
         }
 
         // POST api/piloto
-        // Crea un nuevo piloto
+        // Solo usuarios autenticados con rol Admin o User pueden crear pilotos
+        [Authorize(Roles = "Admin,User")]
         [HttpPost]
         public async Task<ActionResult<Piloto>> CreatePiloto(Piloto piloto)
         {
@@ -64,7 +68,8 @@ namespace MotoGP_API.Controllers
         }
 
         // PUT api/piloto/{id}
-        // Actualiza un piloto existente
+        // Solo administradores pueden actualizar pilotos
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdatePiloto(int id, Piloto updatedPiloto)
         {
@@ -85,8 +90,9 @@ namespace MotoGP_API.Controllers
         }
 
         // DELETE api/piloto/{id}
-        // Elimina un piloto por su ID
+        // Solo administradores pueden eliminar pilotos
         // Si tiene imagen en Cloudinary la elimina también
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePiloto(int id)
         {
@@ -99,49 +105,43 @@ namespace MotoGP_API.Controllers
         }
 
         // POST api/piloto/{id}/imagen
-        // Sube o reemplaza la imagen del piloto en Cloudinary
+        // Solo administradores pueden subir imágenes
+        [Authorize(Roles = "Admin")]
         [HttpPost("{id}/imagen")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> SubirImagen(int id, IFormFile imagen)
         {
             var piloto = await _repository.GetByIdAsync(id);
             if (piloto == null) return NotFound();
-
-            // Si ya tiene imagen la borramos de Cloudinary antes de subir la nueva
             if (!string.IsNullOrEmpty(piloto.ImagenPublicId))
                 await _uploadService.DeleteAsync(piloto.ImagenPublicId);
-
-            // Subimos la nueva imagen y guardamos la URL y el PublicId
             var url = await _uploadService.UploadAsync(imagen);
             piloto.ImagenUrl = url;
             piloto.ImagenPublicId = url.Split('/').Last().Split('.').First();
-
             await _repository.UpdateAsync(piloto);
             return Ok(new { imagenUrl = url });
         }
 
         // DELETE api/piloto/{id}/imagen
-        // Elimina la imagen del piloto de Cloudinary
+        // Solo administradores pueden eliminar imágenes
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}/imagen")]
         public async Task<IActionResult> EliminarImagen(int id)
         {
             var piloto = await _repository.GetByIdAsync(id);
             if (piloto == null) return NotFound();
-
             if (string.IsNullOrEmpty(piloto.ImagenPublicId))
                 return BadRequest("El piloto no tiene imagen.");
-
-            // Eliminamos de Cloudinary y limpiamos los campos
             await _uploadService.DeleteAsync(piloto.ImagenPublicId);
             piloto.ImagenUrl = null;
             piloto.ImagenPublicId = null;
-
             await _repository.UpdateAsync(piloto);
             return NoContent();
         }
 
         // POST api/piloto/inicializar
-        // Inicializa datos de ejemplo
+        // Solo administradores pueden inicializar datos
+        [Authorize(Roles = "Admin")]
         [HttpPost("inicializar")]
         public async Task<IActionResult> InicializarDatos()
         {

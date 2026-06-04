@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MotoGP_API.Repositories;
 using MotoGP_API.Services;
@@ -18,7 +19,8 @@ namespace MotoGP_API.Controllers
         }
 
         // GET api/circuito
-        // Obtiene todos los circuitos
+        // Cualquiera puede ver los circuitos (sin autenticación)
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<List<Circuito>>> GetCircuitos()
         {
@@ -27,7 +29,8 @@ namespace MotoGP_API.Controllers
         }
 
         // GET api/circuito/{id}
-        // Obtiene un circuito por su ID
+        // Cualquiera puede ver un circuito concreto (sin autenticación)
+        [AllowAnonymous]
         [HttpGet("{id}")]
         public async Task<ActionResult<Circuito>> GetCircuito(int id)
         {
@@ -37,7 +40,8 @@ namespace MotoGP_API.Controllers
         }
 
         // POST api/circuito
-        // Crea un nuevo circuito
+        // Solo usuarios autenticados con rol Admin o User pueden crear circuitos
+        [Authorize(Roles = "Admin,User")]
         [HttpPost]
         public async Task<ActionResult<Circuito>> CreateCircuito(Circuito circuito)
         {
@@ -46,7 +50,8 @@ namespace MotoGP_API.Controllers
         }
 
         // PUT api/circuito/{id}
-        // Actualiza un circuito existente
+        // Solo administradores pueden actualizar circuitos
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCircuito(int id, Circuito updatedCircuito)
         {
@@ -64,65 +69,57 @@ namespace MotoGP_API.Controllers
         }
 
         // DELETE api/circuito/{id}
-        // Elimina un circuito por su ID
+        // Solo administradores pueden eliminar circuitos
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCircuito(int id)
         {
             var circuito = await _repository.GetByIdAsync(id);
             if (circuito == null) return NotFound();
-
-            // Si tiene imagen en Cloudinary la eliminamos también
             if (!string.IsNullOrEmpty(circuito.ImagenPublicId))
                 await _uploadService.DeleteAsync(circuito.ImagenPublicId);
-
             await _repository.DeleteAsync(id);
             return NoContent();
         }
 
         // POST api/circuito/{id}/imagen
-        // Sube o reemplaza la imagen del circuito
+        // Solo administradores pueden subir imágenes
+        [Authorize(Roles = "Admin")]
         [HttpPost("{id}/imagen")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> SubirImagen(int id, IFormFile imagen)
         {
             var circuito = await _repository.GetByIdAsync(id);
             if (circuito == null) return NotFound();
-
-            // Si ya tiene imagen la borramos de Cloudinary antes de subir la nueva
             if (!string.IsNullOrEmpty(circuito.ImagenPublicId))
                 await _uploadService.DeleteAsync(circuito.ImagenPublicId);
-
-            // Subimos la nueva imagen y guardamos la URL y el PublicId
             var url = await _uploadService.UploadAsync(imagen);
             circuito.ImagenUrl = url;
             circuito.ImagenPublicId = url.Split('/').Last().Split('.').First();
-
             await _repository.UpdateAsync(circuito);
             return Ok(new { imagenUrl = url });
         }
 
         // DELETE api/circuito/{id}/imagen
-        // Elimina la imagen del circuito
+        // Solo administradores pueden eliminar imágenes
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}/imagen")]
         public async Task<IActionResult> EliminarImagen(int id)
         {
             var circuito = await _repository.GetByIdAsync(id);
             if (circuito == null) return NotFound();
-
             if (string.IsNullOrEmpty(circuito.ImagenPublicId))
                 return BadRequest("El circuito no tiene imagen.");
-
-            // Eliminamos de Cloudinary y limpiamos los campos
             await _uploadService.DeleteAsync(circuito.ImagenPublicId);
             circuito.ImagenUrl = null;
             circuito.ImagenPublicId = null;
-
             await _repository.UpdateAsync(circuito);
             return NoContent();
         }
 
         // POST api/circuito/inicializar
-        // Inicializa datos de ejemplo
+        // Solo administradores pueden inicializar datos
+        [Authorize(Roles = "Admin")]
         [HttpPost("inicializar")]
         public async Task<IActionResult> InicializarDatos()
         {

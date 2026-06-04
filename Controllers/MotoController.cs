@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MotoGP_API.Repositories;
 using MotoGP_API.Services;
@@ -18,7 +19,8 @@ namespace MotoGP_API.Controllers
         }
 
         // GET api/moto
-        // Obtiene todas las motos
+        // Cualquiera puede ver las motos (sin autenticación)
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<List<Moto>>> GetMotos()
         {
@@ -27,7 +29,8 @@ namespace MotoGP_API.Controllers
         }
 
         // GET api/moto/{id}
-        // Obtiene una moto por su ID
+        // Cualquiera puede ver una moto concreta (sin autenticación)
+        [AllowAnonymous]
         [HttpGet("{id}")]
         public async Task<ActionResult<Moto>> GetMoto(int id)
         {
@@ -37,7 +40,8 @@ namespace MotoGP_API.Controllers
         }
 
         // POST api/moto
-        // Crea una nueva moto
+        // Solo usuarios autenticados con rol Admin o User pueden crear motos
+        [Authorize(Roles = "Admin,User")]
         [HttpPost]
         public async Task<ActionResult<Moto>> CreateMoto(Moto moto)
         {
@@ -46,7 +50,8 @@ namespace MotoGP_API.Controllers
         }
 
         // PUT api/moto/{id}
-        // Actualiza una moto existente
+        // Solo administradores pueden actualizar motos
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateMoto(int id, Moto updatedMoto)
         {
@@ -64,65 +69,57 @@ namespace MotoGP_API.Controllers
         }
 
         // DELETE api/moto/{id}
-        // Elimina una moto por su ID
+        // Solo administradores pueden eliminar motos
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMoto(int id)
         {
             var moto = await _repository.GetByIdAsync(id);
             if (moto == null) return NotFound();
-
-            // Si tiene imagen en Cloudinary la eliminamos también
             if (!string.IsNullOrEmpty(moto.ImagenPublicId))
                 await _uploadService.DeleteAsync(moto.ImagenPublicId);
-
             await _repository.DeleteAsync(id);
             return NoContent();
         }
 
         // POST api/moto/{id}/imagen
-        // Sube o reemplaza la imagen de la moto
+        // Solo administradores pueden subir imágenes
+        [Authorize(Roles = "Admin")]
         [HttpPost("{id}/imagen")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> SubirImagen(int id, IFormFile imagen)
         {
             var moto = await _repository.GetByIdAsync(id);
             if (moto == null) return NotFound();
-
-            // Si ya tiene imagen la borramos de Cloudinary antes de subir la nueva
             if (!string.IsNullOrEmpty(moto.ImagenPublicId))
                 await _uploadService.DeleteAsync(moto.ImagenPublicId);
-
-            // Subimos la nueva imagen y guardamos la URL y el PublicId
             var url = await _uploadService.UploadAsync(imagen);
             moto.ImagenUrl = url;
             moto.ImagenPublicId = url.Split('/').Last().Split('.').First();
-
             await _repository.UpdateAsync(moto);
             return Ok(new { imagenUrl = url });
         }
 
         // DELETE api/moto/{id}/imagen
-        // Elimina la imagen de la moto
+        // Solo administradores pueden eliminar imágenes
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}/imagen")]
         public async Task<IActionResult> EliminarImagen(int id)
         {
             var moto = await _repository.GetByIdAsync(id);
             if (moto == null) return NotFound();
-
             if (string.IsNullOrEmpty(moto.ImagenPublicId))
                 return BadRequest("La moto no tiene imagen.");
-
-            // Eliminamos de Cloudinary y limpiamos los campos
             await _uploadService.DeleteAsync(moto.ImagenPublicId);
             moto.ImagenUrl = null;
             moto.ImagenPublicId = null;
-
             await _repository.UpdateAsync(moto);
             return NoContent();
         }
 
         // POST api/moto/inicializar
-        // Inicializa datos de ejemplo
+        // Solo administradores pueden inicializar datos
+        [Authorize(Roles = "Admin")]
         [HttpPost("inicializar")]
         public async Task<IActionResult> InicializarDatos()
         {
