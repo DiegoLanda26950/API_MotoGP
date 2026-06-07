@@ -193,7 +193,7 @@ namespace MotoGP_API.Repositories
             await command.ExecuteNonQueryAsync();
         }
 
-        // Método auxiliar para mapear un SqlDataReader a un objeto Piloto con sus relaciones
+        // Convierte una fila de la base de datos en un objeto que C# puede usar
         private async Task<Piloto> MapPiloto(SqlDataReader reader) => new Piloto
         {
             Id = reader.GetInt32(0),

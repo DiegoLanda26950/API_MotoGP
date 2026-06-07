@@ -114,7 +114,7 @@ namespace MotoGP_API.Repositories
             await command.ExecuteNonQueryAsync();
         }
 
-        // Método auxiliar para mapear un SqlDataReader a un objeto Circuito
+        // Convierte una fila de la base de datos en un objeto que C# puede usar
         private Circuito MapCircuito(SqlDataReader reader) => new Circuito
         {
             Id = reader.GetInt32(0),
