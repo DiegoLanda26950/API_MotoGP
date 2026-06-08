@@ -22,7 +22,7 @@ namespace MotoGP_API.Controllers
         {
             try
             {
-                if (!ModelState.IsValid) return BadRequest(ModelState);
+                if (!ModelState.IsValid) return BadRequest(ModelState); // Comprueba que los datos son validos
                 var token = _authService.Login(loginDtoIn);
                 return Ok(new { token });
             }

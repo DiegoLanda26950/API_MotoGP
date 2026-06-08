@@ -15,6 +15,7 @@ namespace MotoGP_API.Services
         {
             var c = config.Value;
             var account = new Account(c.CloudName, c.ApiKey, c.ApiSecret);
+            // Crea el obejto cloudinary
             _cloudinary = new Cloudinary(account);
         }
 

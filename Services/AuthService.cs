@@ -15,6 +15,7 @@ namespace MotoGP_API.Services
 
         public AuthService(IConfiguration configuration, IUserRepository repository)
         {
+            
             _configuration = configuration;
             _repository = repository;
         }
@@ -41,7 +42,7 @@ namespace MotoGP_API.Services
             {
                 Issuer = _configuration["JWT:ValidIssuer"],
                 Audience = _configuration["JWT:ValidAudience"],
-                Subject = new ClaimsIdentity(new Claim[]
+                Subject = new ClaimsIdentity(new Claim[]   // Se guardan los datos del usuaario dentro del token
                 {
                     // ID del usuario
                     new Claim(ClaimTypes.NameIdentifier, Convert.ToString(userDtoOut.UserId)),
