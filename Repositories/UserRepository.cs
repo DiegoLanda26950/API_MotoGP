@@ -27,31 +27,43 @@ namespace MotoGP_API.Repositories
                     Role = Roles.Admin
                 };
             }
-            // User hardcodeado para pruebas
-            if (loginDtoIn.Email == "user@motogp.com" && loginDtoIn.Password == "User1234!")
+            // JefeDeEquipo hardcodeado para pruebas
+            if (loginDtoIn.Email == "jefe@motogp.com" && loginDtoIn.Password == "Jefe1234!")
             {
                 return new UserDtoOut
                 {
                     UserId = 2,
-                    UserName = "user",
-                    Email = "user@motogp.com",
-                    Role = Roles.User
+                    UserName = "jefedeequipo",
+                    Email = "jefe@motogp.com",
+                    Role = Roles.JefeDeEquipo
+                };
+            }
+            // Espectador hardcodeado para pruebas
+            if (loginDtoIn.Email == "espectador@motogp.com" && loginDtoIn.Password == "Espectador1234!")
+            {
+                return new UserDtoOut
+                {
+                    UserId = 3,
+                    UserName = "espectador",
+                    Email = "espectador@motogp.com",
+                    Role = Roles.Espectador
                 };
             }
             // Si no coincide ninguna credencial lanzamos excepción
             throw new KeyNotFoundException("Usuario o contraseña incorrectos.");
         }
 
-        // Simula el registro creando un nuevo usuario con rol User por defecto
+        // Simula el registro creando un nuevo usuario con rol Espectador por defecto
         // En un caso real insertaría en la base de datos
         public UserDtoOut AddUserFromCredentials(UserDtoIn userDtoIn)
         {
             var user = new UserDtoOut
             {
-                UserId = 3, // ID simulado
+                UserId = 4,
                 UserName = userDtoIn.UserName,
                 Email = userDtoIn.Email,
-                Role = Roles.User // Por defecto los nuevos usuarios son User
+                // Por defecto los nuevos usuarios son Espectador
+                Role = Roles.Espectador
             };
 
             if (user == null)
