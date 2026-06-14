@@ -106,7 +106,12 @@ namespace MotoGP_API.Controllers
 
             var url = await _uploadService.UploadImageAsync(file);
             circuito.ImagenUrl = url;
-            circuito.ImagenPublicId = url.Split('/').Last().Split('.').First();
+
+            // Extraemos el publicId completo incluyendo la carpeta motogp/
+            var uri = new Uri(url);
+            var segments = uri.AbsolutePath.Split('/');
+            var uploadIndex = Array.IndexOf(segments, "upload");
+            circuito.ImagenPublicId = string.Join("/", segments.Skip(uploadIndex + 2).ToArray()).Split('.').First();
 
             await _repository.UpdateAsync(circuito);
             return Ok(new { Url = url });
@@ -121,7 +126,21 @@ namespace MotoGP_API.Controllers
             if (string.IsNullOrWhiteSpace(publicId))
                 return BadRequest("El identificador no puede estar vacío.");
 
+            // Buscamos el circuito que tiene ese publicId
+            var circuitos = await _repository.GetAllAsync();
+            var circuito = circuitos.FirstOrDefault(c => c.ImagenPublicId == publicId);
+
+            // Eliminamos la imagen de Cloudinary
             await _uploadService.DeleteImageAsync(publicId);
+
+            // Si encontramos el circuito actualizamos sus campos en la base de datos
+            if (circuito != null)
+            {
+                circuito.ImagenUrl = null;
+                circuito.ImagenPublicId = null;
+                await _repository.UpdateAsync(circuito);
+            }
+
             return NoContent();
         }
 

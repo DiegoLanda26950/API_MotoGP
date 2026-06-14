@@ -11,7 +11,7 @@ namespace MotoGP_API.Models.DTOs
         public string UserName { get; set; }
         [Required]
         public string Email { get; set; }
-        // Rol del usuario: Admin, User o Guest
+        
         [Required]
         public string Role { get; set; }
     }

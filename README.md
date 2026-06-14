@@ -3,10 +3,17 @@ Comando para tirar la API:  docker-compose down
 
 Lanzar el createdbsql en heidisql para iniciar la BBDD
 
-Credenciales Admin
-    email: admin@motogp.com
-    password: Admin1234!
+Espectador:
 
-Credenciales User:
-    email: user@motogp.com
-    password: User1234!
+espectador@motogp.com
+Espectador1234!
+
+Jefe de equipo:
+
+jefe@motogp.com
+Jefe1234!
+
+Admin:
+
+admin@motogp.com
+Admin1234!

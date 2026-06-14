@@ -52,7 +52,13 @@ namespace MotoGP_API.Services
             if (string.IsNullOrEmpty(imageUrl))
                 throw new Exception("Error al subir la imagen.");
 
-            // Creamos el objeto Piloto con la URL de la imagen
+            // Extraemos el publicId completo incluyendo la carpeta motogp/
+            var uri = new Uri(imageUrl);
+            var segments = uri.AbsolutePath.Split('/');
+            var uploadIndex = Array.IndexOf(segments, "upload");
+            var publicId = string.Join("/", segments.Skip(uploadIndex + 2).ToArray()).Split('.').First();
+
+            // Creamos el objeto Piloto con la URL y el publicId de la imagen
             var piloto = new Piloto
             {
                 Nombre = pilotoDto.Nombre,
@@ -63,6 +69,7 @@ namespace MotoGP_API.Services
                 Activo = pilotoDto.Activo,
                 UsuarioId = pilotoDto.UsuarioId,
                 ImagenUrl = imageUrl,
+                ImagenPublicId = publicId,
                 Moto = new Moto { Id = pilotoDto.MotoId },
                 Equipo = new Equipo { Id = pilotoDto.EquipoId },
                 Circuito = new Circuito { Id = pilotoDto.CircuitoId }

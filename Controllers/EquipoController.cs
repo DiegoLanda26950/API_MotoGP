@@ -105,7 +105,12 @@ namespace MotoGP_API.Controllers
 
             var url = await _uploadService.UploadImageAsync(file);
             equipo.ImagenUrl = url;
-            equipo.ImagenPublicId = url.Split('/').Last().Split('.').First();
+
+            // Extraemos el publicId completo incluyendo la carpeta motogp/
+            var uri = new Uri(url);
+            var segments = uri.AbsolutePath.Split('/');
+            var uploadIndex = Array.IndexOf(segments, "upload");
+            equipo.ImagenPublicId = string.Join("/", segments.Skip(uploadIndex + 2).ToArray()).Split('.').First();
 
             await _repository.UpdateAsync(equipo);
             return Ok(new { Url = url });
@@ -120,7 +125,21 @@ namespace MotoGP_API.Controllers
             if (string.IsNullOrWhiteSpace(publicId))
                 return BadRequest("El identificador no puede estar vacío.");
 
+            // Buscamos el equipo que tiene ese publicId
+            var equipos = await _repository.GetAllAsync();
+            var equipo = equipos.FirstOrDefault(e => e.ImagenPublicId == publicId);
+
+            // Eliminamos la imagen de Cloudinary
             await _uploadService.DeleteImageAsync(publicId);
+
+            // Si encontramos el equipo actualizamos sus campos en la base de datos
+            if (equipo != null)
+            {
+                equipo.ImagenUrl = null;
+                equipo.ImagenPublicId = null;
+                await _repository.UpdateAsync(equipo);
+            }
+
             return NoContent();
         }
 

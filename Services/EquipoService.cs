@@ -41,7 +41,13 @@ namespace MotoGP_API.Services
             if (string.IsNullOrEmpty(imageUrl))
                 throw new Exception("Error al subir la imagen.");
 
-            // Creamos el objeto Equipo con la URL de la imagen
+            // Extraemos el publicId completo incluyendo la carpeta motogp/
+            var uri = new Uri(imageUrl);
+            var segments = uri.AbsolutePath.Split('/');
+            var uploadIndex = Array.IndexOf(segments, "upload");
+            var publicId = string.Join("/", segments.Skip(uploadIndex + 2).ToArray()).Split('.').First();
+
+            // Creamos el objeto Equipo con la URL y el publicId de la imagen
             var equipo = new Equipo
             {
                 Nombre = equipoDto.Nombre,
@@ -50,7 +56,8 @@ namespace MotoGP_API.Services
                 Victorias = equipoDto.Victorias,
                 FechaFundacion = equipoDto.FechaFundacion,
                 EsFabricante = equipoDto.EsFabricante,
-                ImagenUrl = imageUrl
+                ImagenUrl = imageUrl,
+                ImagenPublicId = publicId
             };
 
             await _repo.AddAsync(equipo);
