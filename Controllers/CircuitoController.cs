@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MotoGP_API.Models.DTOs;
 using MotoGP_API.Repositories;
 using MotoGP_API.Services;
 
@@ -10,11 +11,13 @@ namespace MotoGP_API.Controllers
     public class CircuitoController : ControllerBase
     {
         private readonly ICircuitoRepository _repository;
+        private readonly ICircuitoService _service;
         private readonly IUploadService _uploadService;
 
-        public CircuitoController(ICircuitoRepository repository, IUploadService uploadService)
+        public CircuitoController(ICircuitoRepository repository, ICircuitoService service, IUploadService uploadService)
         {
             _repository = repository;
+            _service = service;
             _uploadService = uploadService;
         }
 
@@ -40,12 +43,13 @@ namespace MotoGP_API.Controllers
         }
 
         // POST api/circuito
-        // Solo Admin puede crear circuitos
+        // Solo Admin puede crear circuitos con imagen obligatoria
         [Authorize(Roles = "Admin")]
         [HttpPost]
-        public async Task<ActionResult<Circuito>> CreateCircuito(Circuito circuito)
+        [Consumes("multipart/form-data")]
+        public async Task<ActionResult<Circuito>> CreateCircuito([FromForm] CircuitoCreateDTO circuitoDto)
         {
-            await _repository.AddAsync(circuito);
+            var circuito = await _service.AddAsync(circuitoDto);
             return CreatedAtAction(nameof(GetCircuito), new { id = circuito.Id }, circuito);
         }
 
@@ -76,44 +80,48 @@ namespace MotoGP_API.Controllers
         {
             var circuito = await _repository.GetByIdAsync(id);
             if (circuito == null) return NotFound();
+            // Si tiene imagen en Cloudinary la eliminamos también
             if (!string.IsNullOrEmpty(circuito.ImagenPublicId))
-                await _uploadService.DeleteAsync(circuito.ImagenPublicId);
+                await _uploadService.DeleteImageAsync(circuito.ImagenPublicId);
             await _repository.DeleteAsync(id);
             return NoContent();
         }
 
-        // POST api/circuito/{id}/imagen
-        // Solo Admin puede subir imágenes
+        // POST api/circuito/uploadImage
+        // Solo Admin puede subir o reemplazar la imagen del circuito
         [Authorize(Roles = "Admin")]
-        [HttpPost("{id}/imagen")]
+        [HttpPost("uploadImage")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> SubirImagen(int id, IFormFile imagen)
+        public async Task<IActionResult> UploadImage(int id, IFormFile file)
         {
+            if (file == null || file.Length == 0)
+                return BadRequest("El archivo está vacío.");
+
             var circuito = await _repository.GetByIdAsync(id);
             if (circuito == null) return NotFound();
+
+            // Si ya tiene imagen la borramos de Cloudinary antes de subir la nueva
             if (!string.IsNullOrEmpty(circuito.ImagenPublicId))
-                await _uploadService.DeleteAsync(circuito.ImagenPublicId);
-            var url = await _uploadService.UploadAsync(imagen);
+                await _uploadService.DeleteImageAsync(circuito.ImagenPublicId);
+
+            var url = await _uploadService.UploadImageAsync(file);
             circuito.ImagenUrl = url;
             circuito.ImagenPublicId = url.Split('/').Last().Split('.').First();
+
             await _repository.UpdateAsync(circuito);
-            return Ok(new { imagenUrl = url });
+            return Ok(new { Url = url });
         }
 
-        // DELETE api/circuito/{id}/imagen
-        // Solo Admin puede eliminar imágenes
+        // DELETE api/circuito/deleteImage
+        // Solo Admin puede eliminar la imagen del circuito
         [Authorize(Roles = "Admin")]
-        [HttpDelete("{id}/imagen")]
-        public async Task<IActionResult> EliminarImagen(int id)
+        [HttpDelete("deleteImage")]
+        public async Task<IActionResult> DeleteImage(string publicId)
         {
-            var circuito = await _repository.GetByIdAsync(id);
-            if (circuito == null) return NotFound();
-            if (string.IsNullOrEmpty(circuito.ImagenPublicId))
-                return BadRequest("El circuito no tiene imagen.");
-            await _uploadService.DeleteAsync(circuito.ImagenPublicId);
-            circuito.ImagenUrl = null;
-            circuito.ImagenPublicId = null;
-            await _repository.UpdateAsync(circuito);
+            if (string.IsNullOrWhiteSpace(publicId))
+                return BadRequest("El identificador no puede estar vacío.");
+
+            await _uploadService.DeleteImageAsync(publicId);
             return NoContent();
         }
 

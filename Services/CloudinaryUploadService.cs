@@ -1,7 +1,6 @@
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
-using Microsoft.Extensions.Options;
-using MotoGP_API.Configurations;
+using MotoGP_API.Utils;
 
 namespace MotoGP_API.Services
 {
@@ -10,52 +9,45 @@ namespace MotoGP_API.Services
     {
         private readonly Cloudinary _cloudinary;
 
-        // Constructor que recibe la configuración de Cloudinary
-        public CloudinaryUploadService(IOptions<CloudinarySettings> config)
+        // Lee la configuración de Cloudinary directamente de appsettings.json
+        public CloudinaryUploadService(IConfiguration configuration)
         {
-            var c = config.Value;
-            var account = new Account(c.CloudName, c.ApiKey, c.ApiSecret);
-            // Crea el obejto cloudinary
+            var cloudName = configuration["CloudinarySettings:CloudName"];
+            var apiKey = configuration["CloudinarySettings:ApiKey"];
+            var apiSecret = configuration["CloudinarySettings:ApiSecret"];
+            var account = new Account(cloudName, apiKey, apiSecret);
             _cloudinary = new Cloudinary(account);
         }
 
         // Sube una imagen a Cloudinary y devuelve la URL segura
-        public async Task<string> UploadAsync(IFormFile archivo)
+        public async Task<string> UploadImageAsync(IFormFile file)
         {
-            if (archivo == null || archivo.Length == 0)
-                throw new ArgumentException("El archivo está vacío.");
+            // Validamos el archivo usando el helper
+            var imageValidator = new FileValidationHelper(
+                new[] { "image/jpeg", "image/png", "image/gif" },
+                new[] { ".jpg", ".jpeg", ".png", ".gif" }
+            );
+            imageValidator.Validate(file);
 
-            // Comprobamos que sea una imagen
-            var extension = Path.GetExtension(archivo.FileName).ToLowerInvariant();
-            var esImagen = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp" }.Contains(extension);
+            using var stream = file.OpenReadStream();
 
-            if (!esImagen)
-                throw new ArgumentException("Solo se permiten imágenes.");
-
-            await using var stream = archivo.OpenReadStream();
-
-            // Configuramos los parámetros de subida
+            // Configuramos los parámetros de subida con transformación de tamaño
             var uploadParams = new ImageUploadParams
             {
-                File = new FileDescription(archivo.FileName, stream),
-                Folder = "motogp", // Carpeta en Cloudinary
-                UseFilename = false,
-                UniqueFilename = true
+                File = new FileDescription(file.FileName, stream),
+                Folder = "motogp",
+                Transformation = new Transformation().Width(400).Height(400).Crop("fill")
             };
 
-            var result = await _cloudinary.UploadAsync(uploadParams);
-
-            if (result.Error != null)
-                throw new Exception($"Error al subir a Cloudinary: {result.Error.Message}");
-
-            return result.SecureUrl.ToString();
+            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+            return uploadResult.SecureUrl?.ToString();
         }
 
         // Elimina una imagen de Cloudinary usando su PublicId
-        public async Task DeleteAsync(string publicId)
+        public async Task DeleteImageAsync(string publicId)
         {
             if (string.IsNullOrWhiteSpace(publicId))
-                throw new ArgumentException("El PublicId no puede estar vacío.");
+                throw new ArgumentException("El identificador no puede estar vacío.");
 
             var deleteParams = new DeletionParams(publicId);
             await _cloudinary.DestroyAsync(deleteParams);

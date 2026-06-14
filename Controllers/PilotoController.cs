@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models;
+using MotoGP_API.Models.DTOs;
 using MotoGP_API.Repositories;
 using MotoGP_API.Services;
 
@@ -11,11 +12,13 @@ namespace MotoGP_API.Controllers
     public class PilotoController : ControllerBase
     {
         private readonly IPilotoRepository _repository;
+        private readonly IPilotoService _service;
         private readonly IUploadService _uploadService;
 
-        public PilotoController(IPilotoRepository repository, IUploadService uploadService)
+        public PilotoController(IPilotoRepository repository, IPilotoService service, IUploadService uploadService)
         {
             _repository = repository;
+            _service = service;
             _uploadService = uploadService;
         }
 
@@ -56,12 +59,13 @@ namespace MotoGP_API.Controllers
         }
 
         // POST api/piloto
-        // Admin y JefeDeEquipo pueden crear pilotos
+        // Admin y JefeDeEquipo pueden crear pilotos con imagen obligatoria
         [Authorize(Roles = "Admin,JefeDeEquipo")]
         [HttpPost]
-        public async Task<ActionResult<Piloto>> CreatePiloto(Piloto piloto)
+        [Consumes("multipart/form-data")]
+        public async Task<ActionResult<Piloto>> CreatePiloto([FromForm] PilotoCreateDTO pilotoDto)
         {
-            await _repository.AddAsync(piloto);
+            var piloto = await _service.AddAsync(pilotoDto);
             return CreatedAtAction(nameof(GetPiloto), new { id = piloto.Id }, piloto);
         }
 
@@ -89,6 +93,7 @@ namespace MotoGP_API.Controllers
 
         // DELETE api/piloto/{id}
         // Solo Admin puede eliminar pilotos
+        // Si tiene imagen en Cloudinary la elimina también
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePiloto(int id)
@@ -96,43 +101,46 @@ namespace MotoGP_API.Controllers
             var piloto = await _repository.GetByIdAsync(id);
             if (piloto == null) return NotFound();
             if (!string.IsNullOrEmpty(piloto.ImagenPublicId))
-                await _uploadService.DeleteAsync(piloto.ImagenPublicId);
+                await _uploadService.DeleteImageAsync(piloto.ImagenPublicId);
             await _repository.DeleteAsync(id);
             return NoContent();
         }
 
-        // POST api/piloto/{id}/imagen
-        // Solo Admin puede subir imágenes
+        // POST api/piloto/uploadImage
+        // Solo Admin puede subir o reemplazar la imagen del piloto
         [Authorize(Roles = "Admin")]
-        [HttpPost("{id}/imagen")]
+        [HttpPost("uploadImage")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> SubirImagen(int id, IFormFile imagen)
+        public async Task<IActionResult> UploadImage(int id, IFormFile file)
         {
+            if (file == null || file.Length == 0)
+                return BadRequest("El archivo está vacío.");
+
             var piloto = await _repository.GetByIdAsync(id);
             if (piloto == null) return NotFound();
+
+            // Si ya tiene imagen la borramos de Cloudinary antes de subir la nueva
             if (!string.IsNullOrEmpty(piloto.ImagenPublicId))
-                await _uploadService.DeleteAsync(piloto.ImagenPublicId);
-            var url = await _uploadService.UploadAsync(imagen);
+                await _uploadService.DeleteImageAsync(piloto.ImagenPublicId);
+
+            var url = await _uploadService.UploadImageAsync(file);
             piloto.ImagenUrl = url;
             piloto.ImagenPublicId = url.Split('/').Last().Split('.').First();
+
             await _repository.UpdateAsync(piloto);
-            return Ok(new { imagenUrl = url });
+            return Ok(new { Url = url });
         }
 
-        // DELETE api/piloto/{id}/imagen
-        // Solo Admin puede eliminar imágenes
+        // DELETE api/piloto/deleteImage
+        // Solo Admin puede eliminar la imagen del piloto
         [Authorize(Roles = "Admin")]
-        [HttpDelete("{id}/imagen")]
-        public async Task<IActionResult> EliminarImagen(int id)
+        [HttpDelete("deleteImage")]
+        public async Task<IActionResult> DeleteImage(string publicId)
         {
-            var piloto = await _repository.GetByIdAsync(id);
-            if (piloto == null) return NotFound();
-            if (string.IsNullOrEmpty(piloto.ImagenPublicId))
-                return BadRequest("El piloto no tiene imagen.");
-            await _uploadService.DeleteAsync(piloto.ImagenPublicId);
-            piloto.ImagenUrl = null;
-            piloto.ImagenPublicId = null;
-            await _repository.UpdateAsync(piloto);
+            if (string.IsNullOrWhiteSpace(publicId))
+                return BadRequest("El identificador no puede estar vacío.");
+
+            await _uploadService.DeleteImageAsync(publicId);
             return NoContent();
         }
 

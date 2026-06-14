@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using MotoGP_API.Configurations;
 using MotoGP_API.Repositories;
 using MotoGP_API.Services;
@@ -13,32 +14,25 @@ builder.Services.Configure<CloudinarySettings>(
 );
 
 // Configuración de JWT
-builder.Services.AddAuthentication(options =>
-{
-    // Esquema de autenticación por defecto
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(opt =>
     {
-        // Validamos el emisor del token
-        ValidateIssuer = true,
-        // Validamos la audiencia del token
-        ValidateAudience = true,
-        // Validamos la fecha de expiración
-        ValidateLifetime = true,
-        // Validamos la firma del token
-        ValidateIssuerSigningKey = true,
-        // Valores válidos del emisor y audiencia
-        ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
-        ValidAudience = builder.Configuration["JWT:ValidAudience"],
-        // Clave secreta para firmar el token
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["JWT:SecretKey"]))
-    };
-});
+        opt.TokenValidationParameters = new TokenValidationParameters
+        {
+            // Validamos el emisor del token
+            ValidateIssuer = true,
+            // Validamos la audiencia del token
+            ValidateAudience = true,
+            // Validamos la fecha de expiración
+            ValidateLifetime = true,
+            // Validamos la firma del token
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
+            ValidAudience = builder.Configuration["JWT:ValidAudience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["JWT:SecretKey"]))
+        };
+    });
 
 // Registro de repositorios
 builder.Services.AddScoped<IEquipoRepository, EquipoRepository>();
@@ -52,38 +46,35 @@ builder.Services.AddScoped<IEquipoService, EquipoService>();
 builder.Services.AddScoped<IMotoService, MotoService>();
 builder.Services.AddScoped<ICircuitoService, CircuitoService>();
 builder.Services.AddScoped<IPilotoService, PilotoService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Registro del servicio de subida de imágenes
 builder.Services.AddScoped<IUploadService, CloudinaryUploadService>();
-
-// Registro del servicio de autenticación
-builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 // Configuración de Swagger para que soporte JWT
-builder.Services.AddSwaggerGen(c =>
+builder.Services.AddSwaggerGen(opt =>
 {
-    // Definimos el esquema de seguridad JWT en Swagger
-    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    opt.SwaggerDoc("v1", new OpenApiInfo { Title = "MotoGP_API", Version = "v1" });
+    opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
+        In = ParameterLocation.Header,
+        Description = "Introduce el token JWT así: Bearer {token}",
         Name = "Authorization",
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
-        Scheme = "Bearer",
+        Type = SecuritySchemeType.Http,
         BearerFormat = "JWT",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "Introduce el token JWT así: Bearer {token}"
+        Scheme = "bearer"
     });
-    // Requerimos el token en todas las peticiones protegidas
-    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    opt.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            new OpenApiSecurityScheme
             {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                Reference = new OpenApiReference
                 {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Type = ReferenceType.SecurityScheme,
                     Id = "Bearer"
                 }
             },
@@ -100,9 +91,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-
-// Primero autenticación y luego autorización
+// Primero autenticación y luego autorización (el orden importa)
 app.UseAuthentication();
 app.UseAuthorization();
 
